@@ -4,162 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>8-BIT SUBS · Abonelik Takibi</title>
-<style>
-  :root{
-    color-scheme: dark;
-    --bg:#0b0b16; --panel:#141428; --panel2:#1b1b33; --line:#31315a;
-    --ink:#e9e7ff; --dim:#8a87b8; --acc:#5bf1a2; --acc2:#ffd447;
-    --red:#ff5c7a; --blue:#5ad1ff; --violet:#b28cff;
-  }
-  *{box-sizing:border-box}
-  html,body{min-height:100%}
-  body{
-    margin:0; color:var(--ink); font-family:"Courier New",ui-monospace,monospace;
-    letter-spacing:.02em;
-    background:
-      radial-gradient(circle at 18% -12%, #1e1e42 0, transparent 55%),
-      repeating-linear-gradient(0deg, rgba(255,255,255,.022) 0 1px, transparent 1px 3px),
-      var(--bg);
-    background-attachment:fixed;
-  }
-  .wrap{max-width:1180px;margin:0 auto;padding:24px 18px 56px}
-
-  /* ---------- header ---------- */
-  .hud{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;
-       border-bottom:2px solid var(--line);padding-bottom:16px}
-  h1{font-size:22px;margin:0;letter-spacing:.18em;text-shadow:3px 3px 0 #000}
-  h1 span{color:var(--acc)}
-  .sub{margin:6px 0 0;color:var(--dim);font-size:10px;letter-spacing:.22em}
-  .hud-actions{display:flex;gap:8px;flex-wrap:wrap}
-
-  /* ---------- controls ---------- */
-  .btn{font:inherit;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink);
-       background:var(--panel2);border:2px solid var(--line);padding:9px 12px;cursor:pointer;
-       box-shadow:3px 3px 0 #000}
-  .btn:hover{border-color:var(--acc);color:var(--acc)}
-  .btn:active{transform:translate(3px,3px);box-shadow:none}
-  .btn:focus-visible{outline:2px dashed var(--acc2);outline-offset:2px}
-  .btn.primary{background:var(--acc);color:#04120b;border-color:#8effc7}
-  .btn.primary:hover{background:#8effc7;color:#04120b}
-  .btn.mini{padding:6px 8px;font-size:10px}
-  .btn.danger:hover{border-color:var(--red);color:var(--red)}
-  .btn:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:3px 3px 0 #000}
-
-  select,input{font:inherit;font-size:12px;color:var(--ink);background:#0d0d1c;
-               border:2px solid var(--line);padding:8px;width:100%}
-  select:focus,input:focus{outline:none;border-color:var(--acc)}
-  .inp-mini{font-size:10px;padding:3px 4px;width:auto;margin-top:8px;letter-spacing:.12em}
-
-  /* ---------- stats ---------- */
-  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:22px 0}
-  .stat{background:linear-gradient(180deg,var(--panel2),var(--panel));border:2px solid var(--line);
-        padding:14px;box-shadow:4px 4px 0 rgba(0,0,0,.6)}
-  .stat .label{font-size:10px;letter-spacing:.16em;color:var(--dim);display:block;margin-bottom:8px}
-  .stat .val{font-size:20px;color:var(--acc2);display:block;word-break:break-word}
-  .stat .val.small{font-size:16px;color:var(--ink)}
-  .stat .note{display:block;font-size:9px;color:var(--dim);letter-spacing:.12em;margin-top:6px}
-
-  /* ---------- panels ---------- */
-  .panel{background:var(--panel);border:2px solid var(--line);padding:16px;box-shadow:5px 5px 0 rgba(0,0,0,.5)}
-  .panel-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:10px;flex-wrap:wrap}
-  .panel-head h2{font-size:12px;letter-spacing:.2em;margin:0;color:var(--blue)}
-  .panel-head .hint{font-size:9px;letter-spacing:.14em;color:var(--dim)}
-
-  .urow{display:grid;grid-template-columns:44px 1fr auto auto;gap:10px;align-items:center;
-        padding:9px 0;border-bottom:1px dashed var(--line)}
-  .urow:last-child{border-bottom:0;padding-bottom:0}
-  .uday{text-align:center;border:2px solid var(--line);padding:3px 0;line-height:1.3}
-  .uday b{font-size:13px;display:block}
-  .uday span{font-size:8px;letter-spacing:.16em;color:var(--dim)}
-  .uday.overdue{border-color:var(--red)} .uday.overdue b{color:var(--red)}
-  .uinfo{min-width:0;display:flex;flex-direction:column;gap:3px}
-  .uinfo b{font-size:13px;font-weight:normal;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .uinfo span{font-size:9px;letter-spacing:.12em;color:var(--dim)}
-  .uamt{font-size:13px;color:var(--acc2);white-space:nowrap}
-  .empty-row{font-size:11px;color:var(--dim);letter-spacing:.1em;padding:8px 0}
-
-  /* ---------- toolbar ---------- */
-  .toolbar{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center;margin:18px 0 0}
-  .chips{display:flex;flex-wrap:wrap;gap:6px}
-  .chip{font:inherit;font-size:10px;letter-spacing:.1em;padding:6px 9px;background:transparent;
-        border:2px solid var(--line);color:var(--dim);cursor:pointer;text-transform:uppercase}
-  .chip:hover{border-color:var(--acc);color:var(--acc)}
-  .chip.on{border-color:var(--acc);color:var(--acc);background:rgba(91,241,162,.08)}
-  .chip span{opacity:.6}
-  .sortbox{width:auto}
-  .sortbox select{width:auto;font-size:10px;letter-spacing:.1em;padding:6px 8px}
-
-  /* ---------- cards ---------- */
-  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(285px,1fr));gap:16px;margin-top:16px}
-  .card{background:var(--panel);border:2px solid var(--line);padding:14px;display:flex;flex-direction:column;
-        gap:10px;box-shadow:4px 4px 0 #000}
-  .card.paid{border-color:#2f6b4f}
-  .card.overdue{border-color:#6b2f42}
-  .card-top{display:flex;align-items:center;gap:8px}
-  .card-top h3{margin:0;font-size:14px;font-weight:normal;flex:1;min-width:0;overflow:hidden;
-               text-overflow:ellipsis;white-space:nowrap}
-  .tag{font-size:9px;letter-spacing:.1em;padding:3px 5px;border:2px solid var(--violet);color:var(--violet)}
-  .badge{font-size:9px;letter-spacing:.14em;padding:3px 5px;border:2px solid var(--line);color:var(--dim);white-space:nowrap}
-  .badge.paid{color:var(--acc);border-color:var(--acc)}
-  .badge.overdue{color:var(--red);border-color:var(--red)}
-  .badge.due{color:var(--acc2);border-color:var(--acc2)}
-  .amt{font-size:24px;color:var(--ink);text-shadow:2px 2px 0 #000}
-  .amt small{font-size:10px;color:var(--dim);margin-left:4px;letter-spacing:.1em}
-  .meta{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:10px;letter-spacing:.1em;color:var(--dim)}
-  .meta .rel{color:var(--acc2)}
-  .meta .rel.overdue{color:var(--red)}
-  .card-foot{display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;align-items:center;
-             border-top:1px dashed var(--line);padding-top:10px;margin-top:2px}
-  .spent{font-size:10px;letter-spacing:.1em;color:var(--dim)}
-  .acts{display:flex;gap:6px;flex-wrap:wrap}
-  .hist{list-style:none;margin:0;padding:0;border-top:1px dashed var(--line);padding-top:8px;
-        display:flex;flex-direction:column;gap:5px;font-size:10px}
-  .hist li{display:flex;justify-content:space-between;color:var(--dim)}
-  .hist li span:last-child{color:var(--acc2)}
-  .hist li.none{color:var(--dim)}
-  [hidden]{display:none !important}
-
-  .empty{border:2px dashed var(--line);padding:34px 18px;text-align:center;margin-top:16px;color:var(--dim)}
-  .empty b{display:block;color:var(--ink);font-size:13px;letter-spacing:.14em;margin-bottom:8px;font-weight:normal}
-  .empty .btn{margin-top:12px}
-  footer{margin-top:30px;font-size:9px;letter-spacing:.14em;color:var(--dim);text-align:center;line-height:1.9}
-
-  /* ---------- modal ---------- */
-  dialog.modal{background:var(--panel);color:var(--ink);border:2px solid var(--acc);padding:0;
-               width:min(480px,calc(100vw - 28px));box-shadow:10px 10px 0 #000}
-  dialog.modal::backdrop{background:rgba(4,4,12,.84)}
-  dialog.modal form{padding:18px;display:flex;flex-direction:column;gap:12px}
-  dialog.modal h2{margin:0 0 2px;font-size:13px;letter-spacing:.18em;color:var(--acc)}
-  label{display:flex;flex-direction:column;gap:5px;font-size:9px;letter-spacing:.16em;color:var(--dim)}
-  .row{display:flex;gap:10px}
-  .row>*{flex:1;min-width:0}
-  .modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:6px}
-
-  /* ---------- toast ---------- */
-  #toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,18px);z-index:60;
-         background:var(--acc);color:#04120b;padding:10px 16px;font-size:11px;letter-spacing:.1em;
-         border:2px solid #d9ffe9;box-shadow:4px 4px 0 #000;opacity:0;pointer-events:none;transition:.16s}
-  #toast.on{opacity:1;transform:translate(-50%,0)}
-
-  @media (max-width:860px){
-    .stats{grid-template-columns:repeat(2,1fr);gap:10px}
-    .stat{padding:11px}
-    .stat .val{font-size:17px}
-  }
-  @media (max-width:420px){
-    h1{font-size:18px}
-    .urow{grid-template-columns:40px 1fr auto}
-    .urow .uamt{display:none}
-    .cards{grid-template-columns:1fr}
-  }
-</style>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div class="wrap">
   <header class="hud">
     <div>
       <h1>8-BIT <span>SUBS</span></h1>
-      <p class="sub">ABONELİK TAKİP TERMİNALİ · v1.0</p>
+      <p class="sub">ABONELİK TAKİP TERMİNALİ · v2.0</p>
     </div>
     <div class="hud-actions">
       <button class="btn" id="btnImport">İçe Aktar</button>
@@ -168,29 +20,143 @@
     </div>
   </header>
 
-  <section class="stats" id="stats" aria-label="Özet"></section>
+  <nav class="nav" id="nav" aria-label="Modüller"></nav>
 
-  <section class="panel" aria-label="Yaklaşan ödemeler">
-    <div class="panel-head">
-      <h2>YAKLAŞAN ÖDEMELER</h2>
-      <span class="hint" id="upcomingHint"></span>
-    </div>
-    <div id="upcoming"></div>
+  <!-- ============ DASHBOARD ============ -->
+  <section class="view" id="view-dash" hidden>
+    <div class="stats" id="stats" aria-label="Özet"></div>
+    <section class="panel" aria-label="Yaklaşan ödemeler">
+      <div class="panel-head">
+        <h2>YAKLAŞAN ÖDEMELER</h2>
+        <span class="hint" id="upcomingHint"></span>
+      </div>
+      <div id="upcoming"></div>
+    </section>
   </section>
 
-  <div class="toolbar">
-    <div class="chips" id="chips" aria-label="Kategori filtresi"></div>
-    <div class="sortbox">
-      <select id="sortSel" aria-label="Sıralama">
-        <option value="date">TARİHE GÖRE</option>
-        <option value="amount">TUTARA GÖRE</option>
-        <option value="name">ADA GÖRE</option>
-      </select>
+  <!-- ============ ABONELİKLER ============ -->
+  <section class="view" id="view-subs" hidden>
+    <div class="toolbar">
+      <div class="chips" id="chips" aria-label="Kategori filtresi"></div>
+      <div class="sortbox">
+        <select id="sortSel" aria-label="Sıralama">
+          <option value="date">TARİHE GÖRE</option>
+          <option value="amount">TUTARA GÖRE</option>
+          <option value="name">ADA GÖRE</option>
+        </select>
+      </div>
     </div>
-  </div>
+    <div id="unusedSum" class="sumline" hidden></div>
+    <section class="cards" id="cards" aria-label="Abonelikler"></section>
+    <div id="empty" class="empty" hidden></div>
+  </section>
 
-  <section class="cards" id="cards" aria-label="Abonelikler"></section>
-  <div id="empty" class="empty" hidden></div>
+  <!-- ============ ÖDEME TAKVİMİ ============ -->
+  <section class="view" id="view-cal" hidden>
+    <section class="panel">
+      <div class="cal-head">
+        <button class="btn mini" id="calPrev" aria-label="Önceki ay">‹ ÖNCEKİ</button>
+        <span class="cal-title" id="calTitle"></span>
+        <div style="display:flex;gap:8px">
+          <button class="btn mini" id="calToday">BUGÜN</button>
+          <button class="btn mini" id="calNext" aria-label="Sonraki ay">SONRAKİ ›</button>
+        </div>
+      </div>
+      <div class="cal" id="calGrid" aria-label="Aylık takvim"></div>
+      <p class="hint">Ödemeler için planlanan tarihler ve deneme bitişleri gösterilir. Bir kayda tıkla → detay/düzenle.</p>
+    </section>
+    <div class="grid2">
+      <section class="panel" aria-label="Geçikmiş ödemeler">
+        <div class="panel-head"><h2>GECİKMİŞ ÖDEMELER</h2><span class="hint" id="overdueHint"></span></div>
+        <div id="overdueList"></div>
+      </section>
+      <section class="panel" aria-label="Önümüzdeki 7 gün">
+        <div class="panel-head"><h2>ÖNÜMÜZDEKİ 7 GÜN</h2><span class="hint" id="weekHint"></span></div>
+        <div id="weekList"></div>
+      </section>
+    </div>
+  </section>
+
+  <!-- ============ İSTATİSTİKLER ============ -->
+  <section class="view" id="view-stats" hidden>
+    <section class="panel" aria-label="Aylık harcama grafiği">
+      <div class="panel-head"><h2>AYLIK HARCAMA · SON 12 AY (GERÇEKLEŞEN)</h2><span class="hint" id="chartHint"></span></div>
+      <div class="bars" id="chartBars"></div>
+    </section>
+    <div class="grid2">
+      <section class="panel" aria-label="Yıllık özet">
+        <div class="panel-head"><h2>YILLIK ÖZET</h2></div>
+        <div id="yearSummary"></div>
+      </section>
+      <section class="panel" aria-label="Kategori dağılımı">
+        <div class="panel-head"><h2>KATEGORİ DAĞILIMI · PLANLANAN</h2></div>
+        <div id="catDist"></div>
+      </section>
+      <section class="panel" aria-label="En pahalı abonelikler">
+        <div class="panel-head"><h2>EN PAHALI ABONELİKLER</h2></div>
+        <div id="topList"></div>
+      </section>
+      <section class="panel" aria-label="Aktif ve iptal karşılaştırma">
+        <div class="panel-head"><h2>AKTİF ↔ İPTAL</h2></div>
+        <div id="cmpList"></div>
+      </section>
+    </div>
+    <section class="panel" aria-label="Tasarruf">
+      <div class="panel-head"><h2>İPTAL EDİLENLERDEN TASARRUF</h2></div>
+      <div id="savingsBox"></div>
+    </section>
+    <section class="panel" aria-label="Geçmiş ödemeler">
+      <div class="panel-head"><h2>GEÇMİŞ ÖDEME KAYITLARI</h2><span class="hint" id="histHint"></span></div>
+      <div id="allHistory"></div>
+    </section>
+  </section>
+
+  <!-- ============ BÜTÇE ============ -->
+  <section class="view" id="view-budget" hidden>
+    <section class="panel" aria-label="Aylık bütçe">
+      <div class="panel-head"><h2>AYLIK BÜTÇE · <span id="budgetCur"></span></h2></div>
+      <div class="row">
+        <label>AYLIK BÜTÇE TUTARI
+          <input id="budgetInp" type="number" min="0" step="1" inputmode="decimal" placeholder="örn. 1500">
+        </label>
+      </div>
+      <div class="pbar" id="budgetBar"><div class="fill" id="budgetFill"></div></div>
+      <div class="bnote" id="budgetNote"></div>
+      <div id="budgetRows"></div>
+    </section>
+    <section class="panel" aria-label="Kategori sınırları">
+      <div class="panel-head"><h2>KATEGORİ SINIRLARI · AYLIK</h2><span class="hint">BOŞ = SINIRSIZ</span></div>
+      <div id="catLimits"></div>
+    </section>
+  </section>
+
+  <!-- ============ AYARLAR ============ -->
+  <section class="view" id="view-settings" hidden>
+    <section class="panel" aria-label="Genel ayarlar">
+      <div class="panel-head"><h2>GENEL</h2></div>
+      <div class="row">
+        <label>ÖZET PARA BİRİMİ<select id="curSet"></select></label>
+      </div>
+    </section>
+    <section class="panel" aria-label="Bildirim ayarları">
+      <div class="panel-head"><h2>BİLDİRİMLER</h2><span class="hint" id="npStatus"></span></div>
+      <label class="chk"><input type="checkbox" id="nEnabled"> Bildirimleri etkinleştir (tarayıcı izni gerekir)</label>
+      <label class="chk"><input type="checkbox" id="nD3"> Ödemeden 3 gün önce hatırlat</label>
+      <label class="chk"><input type="checkbox" id="nD0"> Ödeme günü hatırlat</label>
+      <label class="chk"><input type="checkbox" id="nTrial"> Ücretsiz deneme bitişine yakın uyar</label>
+      <div class="srow"><button class="btn" id="npBtn">İZİN İSTE</button></div>
+      <p class="hint">Bildirimler uygulama açıkken / sekme arka plandayken çalışır. Uygulama tamamen kapalıyken bildirim garantisi yoktur — tarayıcı bildirim API'sinin sınırı budur.</p>
+    </section>
+    <section class="panel" aria-label="Veri yönetimi">
+      <div class="panel-head"><h2>VERİ</h2><span class="hint" id="autoInfo"></span></div>
+      <div class="acts">
+        <button class="btn" id="btnRestoreSnap">İÇE AKTARMA ÖNCESİ YEDEĞİ GERİ YÜKLE</button>
+        <button class="btn" id="btnRestoreAuto">OTOMATİK YEDEĞİ GERİ YÜKLE</button>
+        <button class="btn danger" id="btnReset">TÜM VERİYİ SIFIRLA</button>
+      </div>
+      <p class="hint">İçe aktarma öncesi mevcut veri otomatik yedeklenir (yukarıdaki butonla geri yüklenir). Uygulama her 10 dakikada bir yerel otomatik yedek de tutar. Sıfırlama geri alınamaz.</p>
+    </section>
+  </section>
 
   <footer>
     Veriler yalnız bu tarayıcıda (localStorage) saklanır.<br>
@@ -201,9 +167,14 @@
 <dialog class="modal" id="dlg">
   <form id="form">
     <h2 id="dlgTitle">YENİ ABONELİK</h2>
-    <label>ABONELİK ADI
-      <input name="name" required maxlength="40" placeholder="Netflix" autocomplete="off">
-    </label>
+    <div class="row">
+      <label>ABONELİK ADI
+        <input name="name" required maxlength="40" placeholder="Netflix" autocomplete="off">
+      </label>
+      <label>İKON (EMOJİ)
+        <input name="icon" maxlength="4" placeholder="🎬" autocomplete="off">
+      </label>
+    </div>
     <div class="row">
       <label>TUTAR
         <input name="amount" type="number" min="0.01" step="0.01" required placeholder="149.99" inputmode="decimal">
@@ -217,15 +188,43 @@
         <select name="category" id="catOptions"></select>
       </label>
       <label>PERİYOT
-        <select name="period">
+        <select name="period" id="perOptions">
           <option value="weekly">Haftalık</option>
           <option value="monthly">Aylık</option>
+          <option value="quarterly">Üç Aylık</option>
+          <option value="semiannual">Altı Aylık</option>
           <option value="yearly">Yıllık</option>
         </select>
       </label>
     </div>
-    <label>SONRAKİ ÖDEME TARİHİ
-      <input name="nextDate" type="date" required>
+    <div class="row">
+      <label>SONRAKİ ÖDEME TARİHİ
+        <input name="nextDate" type="date" required>
+      </label>
+      <label>BAŞLANGIÇ TARİHİ
+        <input name="startDate" type="date">
+      </label>
+    </div>
+    <div class="row">
+      <label>ÖDEME YÖNTEMİ
+        <select name="payMethod" id="payOptions"></select>
+      </label>
+      <label>DURUM
+        <select name="status">
+          <option value="active">Aktif</option>
+          <option value="cancelled">İptal Edildi</option>
+        </select>
+      </label>
+    </div>
+    <label class="chk"><input type="checkbox" name="isTrial"> ÜCRETSİZ DENEME</label>
+    <label id="trialRow" hidden>DENEME BİTİŞ / ÜCRETLİYE DÖNÜŞÜM TARİHİ
+      <input name="trialEnd" type="date">
+    </label>
+    <label>İPTAL BAĞLANTISI
+      <input name="cancelUrl" type="url" placeholder="https://servis.com/iptal" autocomplete="off">
+    </label>
+    <label>KİŞİSEL NOTLAR
+      <textarea name="notes" maxlength="300" rows="2" placeholder="Fiyat artışı, paket detayı…"></textarea>
     </label>
     <div class="modal-actions">
       <button type="button" class="btn" id="btnCancel">Vazgeç</button>
@@ -237,539 +236,8 @@
 <div id="toast" role="status" aria-live="polite"></div>
 <input type="file" id="fileInput" accept=".json,application/json" hidden>
 
-<script>
-(function () {
-  'use strict';
-
-  /* ---------------- sabitler ---------------- */
-  var LS_KEY = '8bit-subs.v1';
-  var CATS = [
-    ['ent', 'Eğlence', 'ENT'],
-    ['muz', 'Müzik', 'MZK'],
-    ['yaz', 'Yazılım', 'YZM'],
-    ['oyn', 'Oyun', 'OYN'],
-    ['egt', 'Eğitim', 'EGT'],
-    ['spr', 'Spor', 'SPR'],
-    ['dgr', 'Diğer', 'DGR']
-  ];
-  var CAT = {};
-  CATS.forEach(function (c) { CAT[c[0]] = { name: c[1], tag: c[2] }; });
-  var CURRENCIES = ['TRY', 'USD', 'EUR', 'GBP'];
-  var PERIOD = {
-    weekly: { label: 'Haftalık', short: '/hafta' },
-    monthly: { label: 'Aylık', short: '/ay' },
-    yearly: { label: 'Yıllık', short: '/yıl' }
-  };
-  var STATUS = { paid: 'ÖDENDİ', overdue: 'GECİKMİŞ', due: 'BUGÜN', pending: 'BEKLİYOR' };
-
-  /* ---------------- tarih yardımcıları ---------------- */
-  function pad(n) { return String(n).padStart(2, '0'); }
-  function fmtDate(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
-  function todayStr() { return fmtDate(new Date()); }
-  function parseDate(s) {
-    var p = s.split('-');
-    return new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
-  }
-  function validDate(s) {
-    if (typeof s !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
-    return fmtDate(parseDate(s)) === s;
-  }
-  function daysInMonth(y, m) { return new Date(y, m + 1, 0).getDate(); }
-
-  // Ay sonu 31 -> 30 günlük aya kırpılır (31 Ocak -> 28 Şubat); sonrasında ayın 28'i baz alınır.
-  // shortcut: kırpma kalıcıdır, ayın son günü takibi gerekiyorsa kural değiştirilmeli.
-  function addPeriod(dateStr, period, times) {
-    times = times || 1;
-    var d = parseDate(dateStr);
-    if (period === 'weekly') {
-      d.setDate(d.getDate() + 7 * times);
-    } else if (period === 'monthly') {
-      var day = d.getDate();
-      d.setDate(1);
-      d.setMonth(d.getMonth() + times);
-      d.setDate(Math.min(day, daysInMonth(d.getFullYear(), d.getMonth())));
-    } else {
-      var mday = d.getDate(), mon = d.getMonth();
-      d.setDate(1);
-      d.setFullYear(d.getFullYear() + times);
-      d.setMonth(mon);
-      d.setDate(Math.min(mday, daysInMonth(d.getFullYear(), mon)));
-    }
-    return fmtDate(d);
-  }
-  function daysUntil(dateStr) {
-    return Math.round((parseDate(dateStr) - parseDate(todayStr())) / 86400000);
-  }
-  // Ödeme yapıldığında sıradaki tarih: bir periyot ilerlet, geçmişte kalırsa bugünü geçene kadar ilerlet.
-  function nextDateAfter(nextDate, period, today) {
-    var n = addPeriod(nextDate, period);
-    var guard = 0;
-    while (n <= today && guard++ < 2000) n = addPeriod(n, period);
-    return n;
-  }
-  function monthlyOf(amount, period) {
-    if (period === 'weekly') return amount * 52 / 12;
-    if (period === 'yearly') return amount / 12;
-    return amount;
-  }
-  function money(n, cur) {
-    try {
-      return new Intl.NumberFormat('tr-TR', {
-        style: 'currency', currency: cur, minimumFractionDigits: 0, maximumFractionDigits: 2
-      }).format(n);
-    } catch (e) { return n.toFixed(2) + ' ' + cur; }
-  }
-  function dateLabel(s) {
-    return new Intl.DateTimeFormat('tr-TR', { day: '2-digit', month: 'short', year: 'numeric' })
-      .format(parseDate(s)).replace('.', '');
-  }
-  function dayParts(s) {
-    var d = parseDate(s);
-    var month = new Intl.DateTimeFormat('tr-TR', { month: 'short' }).format(d).replace('.', '');
-    return { day: pad(d.getDate()), month: month.toLocaleUpperCase('tr-TR') };
-  }
-  function relLabel(days) {
-    if (days === 0) return 'bugün';
-    if (days === 1) return 'yarın';
-    if (days === -1) return 'dün';
-    return days > 0 ? days + ' gün sonra' : (-days) + ' gün gecikti';
-  }
-  function esc(s) {
-    return String(s).replace(/[&<>"']/g, function (c) {
-      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
-    });
-  }
-  function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
-
-  /* ---------------- durum ---------------- */
-  function normalize(v) {
-    if (!v || typeof v !== 'object') return null;
-    var name = typeof v.name === 'string' ? v.name.trim().slice(0, 40) : '';
-    var amount = Number(v.amount);
-    if (!name || !isFinite(amount) || amount < 0) return null;
-    var history = Array.isArray(v.history) ? v.history.filter(function (h) {
-      return h && validDate(h.date) && isFinite(Number(h.amount));
-    }).map(function (h) {
-      return { date: h.date, amount: Number(h.amount) };
-    }).slice(-500) : [];
-    return {
-      id: typeof v.id === 'string' && v.id ? v.id : uid(),
-      name: name,
-      amount: amount,
-      currency: CURRENCIES.indexOf(v.currency) >= 0 ? v.currency : 'TRY',
-      category: CAT[v.category] ? v.category : 'dgr',
-      period: PERIOD[v.period] ? v.period : 'monthly',
-      nextDate: validDate(v.nextDate) ? v.nextDate : todayStr(),
-      lastPaid: validDate(v.lastPaid) ? v.lastPaid : null,
-      history: history
-    };
-  }
-
-  function load() {
-    try {
-      var raw = localStorage.getItem(LS_KEY);
-      if (!raw) return { currency: 'TRY', subs: [] };
-      var j = JSON.parse(raw);
-      return {
-        currency: CURRENCIES.indexOf(j.currency) >= 0 ? j.currency : 'TRY',
-        subs: (Array.isArray(j.subs) ? j.subs : []).map(normalize).filter(Boolean)
-      };
-    } catch (e) {
-      console.warn('Kayıtlı veri okunamadı:', e);
-      return { currency: 'TRY', subs: [] };
-    }
-  }
-  function save() {
-    try {
-      localStorage.setItem(LS_KEY, JSON.stringify(state));
-    } catch (e) {
-      toast('KAYDEDİLEMEDİ · DEPOLAMA DOLU OLABİLİR');
-    }
-  }
-
-  var state = load();
-  var filterCat = 'all';
-  var sortBy = 'date';
-  var editingId = null;
-  var expanded = {};
-  var toastTimer = null;
-
-  /* ---------------- DOM ---------------- */
-  var $ = function (id) { return document.getElementById(id); };
-  var statsEl = $('stats'), upcomingEl = $('upcoming'), upcomingHint = $('upcomingHint');
-  var chipsEl = $('chips'), cardsEl = $('cards'), emptyEl = $('empty');
-  var dlg = $('dlg'), form = $('form'), dlgTitle = $('dlgTitle');
-  var sortSel = $('sortSel'), fileInput = $('fileInput');
-
-  /* ---------------- yardımcılar ---------------- */
-  function toast(msg) {
-    var t = $('toast');
-    t.textContent = msg;
-    t.classList.add('on');
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(function () { t.classList.remove('on'); }, 2400);
-  }
-  function statusOf(s, today) {
-    if (s.lastPaid === today) return 'paid';
-    if (s.nextDate < today) return 'overdue';
-    if (s.nextDate === today) return 'due';
-    return 'pending';
-  }
-  function spentOf(s) {
-    return s.history.reduce(function (sum, h) { return sum + h.amount; }, 0);
-  }
-  // shortcut: geçmiş kaydı anlık kuru saklamaz; aboneliğin para birimi değişirse eski ödemeler yeni birimle gösterilir.
-  function visibleSubs() {
-    return state.subs.filter(function (s) { return filterCat === 'all' || s.category === filterCat; });
-  }
-
-  /* ---------------- render ---------------- */
-  function renderStats(today) {
-    var inCur = state.subs.filter(function (s) { return s.currency === state.currency; });
-    var month = inCur.reduce(function (sum, s) { return sum + monthlyOf(s.amount, s.period); }, 0);
-    var soon = state.subs.filter(function (s) {
-      var d = daysUntil(s.nextDate);
-      return d >= 0 && d <= 7;
-    }).length;
-    var curOpts = CURRENCIES.map(function (c) {
-      return '<option value="' + c + '"' + (c === state.currency ? ' selected' : '') + '>' + c + '</option>';
-    }).join('');
-
-    statsEl.innerHTML =
-      '<div class="stat"><span class="label">AYLIK GİDER</span>' +
-        '<span class="val">' + money(month, state.currency) + '</span>' +
-        '<select class="inp-mini" id="curSel" aria-label="Özet para birimi">' + curOpts + '</select></div>' +
-      '<div class="stat"><span class="label">YILLIK GİDER</span>' +
-        '<span class="val">' + money(month * 12, state.currency) + '</span>' +
-        '<span class="note">' + state.currency + ' · TAHMİNİ</span></div>' +
-      '<div class="stat"><span class="label">AKTİF ABONELİK</span>' +
-        '<span class="val small">' + state.subs.length + ' KAYIT</span>' +
-        '<span class="note">' + new Set(state.subs.map(function (s) { return s.category; })).size + ' KATEGORİ</span></div>' +
-      '<div class="stat"><span class="label">YAKLAŞAN · 7 GÜN</span>' +
-        '<span class="val small">' + soon + ' ÖDEME</span>' +
-        '<span class="note">BUGÜN DAHİL</span></div>';
-  }
-
-  function renderUpcoming(today) {
-    var items = state.subs.filter(function (s) {
-      return daysUntil(s.nextDate) <= 30;
-    }).sort(function (a, b) { return a.nextDate.localeCompare(b.nextDate); }).slice(0, 6);
-
-    var pushed = state.subs.filter(function (s) { return s.nextDate < today; }).length;
-    upcomingHint.textContent = pushed
-      ? pushed + ' GECİKMİŞ KAYIT'
-      : items.length + ' YAKLAŞAN KAYIT';
-
-    if (!items.length) {
-      upcomingEl.innerHTML = '<p class="empty-row">30 gün içinde ödeme yok. Rahat ol.</p>';
-      return;
-    }
-    upcomingEl.innerHTML = items.map(function (s) {
-      var d = daysUntil(s.nextDate);
-      var p = dayParts(s.nextDate);
-      var st = statusOf(s, today);
-      var cat = CAT[s.category];
-      return '<div class="urow" data-id="' + s.id + '">' +
-        '<div class="uday' + (st === 'overdue' ? ' overdue' : '') + '"><b>' + p.day + '</b><span>' + p.month + '</span></div>' +
-        '<div class="uinfo"><b>' + esc(s.name) + '</b>' +
-          '<span>' + esc(cat.name) + ' · ' + PERIOD[s.period].label + ' · ' + relLabel(d) + '</span></div>' +
-        '<div class="uamt">' + money(s.amount, s.currency) + '</div>' +
-        '<button class="btn mini" data-act="pay"' + (st === 'paid' ? ' disabled' : '') + '>Öde</button>' +
-      '</div>';
-    }).join('');
-  }
-
-  function renderChips() {
-    var counts = {};
-    state.subs.forEach(function (s) { counts[s.category] = (counts[s.category] || 0) + 1; });
-    if (filterCat !== 'all' && !counts[filterCat]) filterCat = 'all';
-    var items = [['all', 'Tümü', state.subs.length]].concat(
-      CATS.filter(function (c) { return counts[c[0]]; }).map(function (c) { return [c[0], c[1], counts[c[0]]]; })
-    );
-    chipsEl.innerHTML = items.map(function (c) {
-      return '<button class="chip' + (filterCat === c[0] ? ' on' : '') + '" data-cat="' + c[0] + '">' +
-        c[1] + ' <span>' + c[2] + '</span></button>';
-    }).join('');
-  }
-
-  function cardHTML(s, today) {
-    var st = statusOf(s, today);
-    var cat = CAT[s.category];
-    var d = daysUntil(s.nextDate);
-    var spent = spentOf(s);
-    var h = s.history;
-    var open = !!expanded[s.id];
-    var histRows = h.length
-      ? h.slice().reverse().slice(0, 12).map(function (x) {
-          return '<li><span>' + dateLabel(x.date) + '</span><span>' + money(x.amount, s.currency) + '</span></li>';
-        }).join('') + (h.length > 12 ? '<li><span>…</span><span>+' + (h.length - 12) + ' kayıt</span></li>' : '')
-      : '<li class="none">Henüz ödeme kaydı yok.</li>';
-
-    return '<article class="card ' + st + '" data-id="' + s.id + '">' +
-      '<div class="card-top">' +
-        '<span class="tag">' + cat.tag + '</span>' +
-        '<h3 title="' + esc(s.name) + '">' + esc(s.name) + '</h3>' +
-        '<span class="badge ' + st + '">' + STATUS[st] + '</span>' +
-      '</div>' +
-      '<div class="amt">' + money(s.amount, s.currency) + '<small>' + PERIOD[s.period].short + '</small></div>' +
-      '<div class="meta">' +
-        '<span>SIRADAKİ · ' + dateLabel(s.nextDate) + '</span>' +
-        '<span class="rel' + (st === 'overdue' ? ' overdue' : '') + '">' + relLabel(d) + '</span>' +
-      '</div>' +
-      '<div class="card-foot">' +
-        '<span class="spent">' + (h.length ? h.length + ' ÖDEME · ' + money(spent, s.currency) : 'KAYIT YOK') + '</span>' +
-        '<div class="acts">' +
-          '<button class="btn mini" data-act="pay"' + (st === 'paid' ? ' disabled' : '') + '>✓ Öde</button>' +
-          '<button class="btn mini" data-act="hist" aria-expanded="' + open + '">Geçmiş</button>' +
-          '<button class="btn mini" data-act="edit" aria-label="Düzenle">✎</button>' +
-          '<button class="btn mini danger" data-act="del" aria-label="Sil">✕</button>' +
-        '</div>' +
-      '</div>' +
-      '<ul class="hist"' + (open ? '' : ' hidden') + '>' + histRows + '</ul>' +
-    '</article>';
-  }
-
-  function renderCards(today) {
-    var list = visibleSubs().slice();
-    if (sortBy === 'amount') {
-      list.sort(function (a, b) {
-        return monthlyOf(b.amount, b.period) - monthlyOf(a.amount, a.period);
-      });
-    } else if (sortBy === 'name') {
-      list.sort(function (a, b) { return a.name.localeCompare(b.name, 'tr'); });
-    } else {
-      list.sort(function (a, b) { return a.nextDate.localeCompare(b.nextDate); });
-    }
-
-    cardsEl.innerHTML = list.map(function (s) { return cardHTML(s, today); }).join('');
-
-    if (!state.subs.length) {
-      emptyEl.hidden = false;
-      emptyEl.innerHTML = '<b>HENÜZ ABONELİK YOK</b>' +
-        'İlk kaydı ekle, ödemeleri buradan takip et.' +
-        '<br><button class="btn primary" data-new>+ İlk Aboneliği Ekle</button>';
-    } else if (!list.length) {
-      emptyEl.hidden = false;
-      emptyEl.innerHTML = '<b>BU KATEGORİDE KAYIT YOK</b>Farklı bir kategori seç ya da yeni abonelik ekle.';
-    } else {
-      emptyEl.hidden = true;
-      emptyEl.innerHTML = '';
-    }
-  }
-
-  function render() {
-    var today = todayStr();
-    renderStats(today);
-    renderUpcoming(today);
-    renderChips();
-    renderCards(today);
-  }
-
-  /* ---------------- eylemler ---------------- */
-  function openForm(sub) {
-    editingId = sub ? sub.id : null;
-    dlgTitle.textContent = sub ? 'ABONELİĞİ DÜZENLE' : 'YENİ ABONELİK';
-    form.reset();
-    form.elements.currency.value = sub ? sub.currency : state.currency;
-    form.elements.category.value = sub ? sub.category : 'ent';
-    form.elements.period.value = sub ? sub.period : 'monthly';
-    form.elements.nextDate.value = sub ? sub.nextDate : todayStr();
-    if (sub) {
-      form.elements.name.value = sub.name;
-      form.elements.amount.value = sub.amount;
-    }
-    dlg.showModal();
-    form.elements.name.focus();
-  }
-
-  function pay(id) {
-    var s = state.subs.find(function (x) { return x.id === id; });
-    if (!s) return;
-    var today = todayStr();
-    if (s.lastPaid === today) return;
-    s.history.push({ date: today, amount: s.amount });
-    s.lastPaid = today;
-    s.nextDate = nextDateAfter(s.nextDate, s.period, today);
-    save();
-    render();
-    toast(s.name.toLocaleUpperCase('tr-TR') + ' ÖDENDİ · SIRADAKİ ' + dateLabel(s.nextDate));
-  }
-
-  function remove(id) {
-    var s = state.subs.find(function (x) { return x.id === id; });
-    if (!s) return;
-    if (!confirm('"' + s.name + '" silinsin mi? Ödeme geçmişi de silinir.')) return;
-    state.subs = state.subs.filter(function (x) { return x.id !== id; });
-    save();
-    render();
-    toast('SİLİNDİ');
-  }
-
-  function toggleHist(id) {
-    expanded[id] = !expanded[id];
-    render();
-  }
-
-  /* ---------------- olaylar ---------------- */
-  $('btnNew').addEventListener('click', function () { openForm(null); });
-  $('btnCancel').addEventListener('click', function () { dlg.close(); });
-  $('btnExport').addEventListener('click', function () {
-    var payload = {
-      app: '8bit-subs', version: 1,
-      exportedAt: new Date().toISOString(),
-      currency: state.currency,
-      subscriptions: state.subs
-    };
-    var blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement('a');
-    a.href = url;
-    a.download = '8bit-subs-' + todayStr() + '.json';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
-    toast('JSON İNDİRİLDİ');
-  });
-  $('btnImport').addEventListener('click', function () { fileInput.click(); });
-
-  fileInput.addEventListener('change', function () {
-    var file = fileInput.files && fileInput.files[0];
-    if (!file) return;
-    file.text().then(function (txt) {
-      var j = JSON.parse(txt);
-      var arr = Array.isArray(j) ? j : (j && Array.isArray(j.subscriptions) ? j.subscriptions : null);
-      if (!arr) throw new Error('JSON içinde "subscriptions" dizisi yok');
-      var subs = arr.map(normalize).filter(Boolean);
-      if (!subs.length) throw new Error('geçerli abonelik kaydı bulunamadı');
-      if (!confirm(subs.length + ' abonelik içe aktarılacak. Mevcut ' + state.subs.length +
-                   ' kayıt değiştirilecek. Devam edilsin mi?')) return;
-      state.subs = subs;
-      if (!Array.isArray(j) && j && CURRENCIES.indexOf(j.currency) >= 0) state.currency = j.currency;
-      save();
-      render();
-      toast(subs.length + ' ABONELİK YÜKLENDİ');
-    }).catch(function (err) {
-      alert('İçe aktarma başarısız: ' + err.message);
-    }).finally(function () {
-      fileInput.value = '';
-    });
-  });
-
-  form.addEventListener('submit', function (e) {
-    e.preventDefault();
-    var f = form.elements;
-    var name = f.name.value.trim();
-    var amount = Number(f.amount.value);
-    var nextDate = f.nextDate.value;
-    if (!name) { f.name.focus(); return; }
-    if (!isFinite(amount) || amount <= 0) { f.amount.focus(); return; }
-    if (!validDate(nextDate)) { f.nextDate.focus(); return; }
-
-    var patch = {
-      name: name.slice(0, 40),
-      amount: amount,
-      currency: f.currency.value,
-      category: f.category.value,
-      period: f.period.value,
-      nextDate: nextDate
-    };
-
-    if (editingId) {
-      var s = state.subs.find(function (x) { return x.id === editingId; });
-      if (s) Object.assign(s, patch);
-      toast('GÜNCELLENDİ');
-    } else {
-      var row = normalize(patch);
-      row.lastPaid = null;
-      row.history = [];
-      state.subs.push(row);
-      toast('ABONELİK EKLENDİ');
-    }
-    save();
-    dlg.close();
-    render();
-  });
-
-  statsEl.addEventListener('change', function (e) {
-    if (e.target.id !== 'curSel') return;
-    state.currency = e.target.value;
-    save();
-    render();
-  });
-
-  chipsEl.addEventListener('click', function (e) {
-    var chip = e.target.closest('[data-cat]');
-    if (!chip) return;
-    filterCat = chip.dataset.cat;
-    render();
-  });
-
-  sortSel.addEventListener('change', function () {
-    sortBy = sortSel.value;
-    renderCards(todayStr());
-  });
-
-  function handleAct(e) {
-    var btn = e.target.closest('[data-act]');
-    if (!btn) return;
-    var card = btn.closest('[data-id]');
-    if (!card) return;
-    var id = card.dataset.id;
-    var act = btn.dataset.act;
-    if (act === 'pay') pay(id);
-    else if (act === 'edit') openForm(state.subs.find(function (x) { return x.id === id; }));
-    else if (act === 'del') remove(id);
-    else if (act === 'hist') toggleHist(id);
-  }
-  cardsEl.addEventListener('click', handleAct);
-  upcomingEl.addEventListener('click', handleAct);
-
-  emptyEl.addEventListener('click', function (e) {
-    if (e.target.closest('[data-new]')) openForm(null);
-  });
-
-  // Başka sekmede değişiklik olursa yakala
-  window.addEventListener('storage', function (e) {
-    if (e.key !== LS_KEY) return;
-    state = load();
-    render();
-  });
-
-  /* ---------------- seçenekleri doldur ---------------- */
-  $('curOptions').innerHTML = CURRENCIES.map(function (c) {
-    return '<option value="' + c + '">' + c + '</option>';
-  }).join('');
-  $('catOptions').innerHTML = CATS.map(function (c) {
-    return '<option value="' + c[0] + '">' + c[1] + '</option>';
-  }).join('');
-
-  render();
-
-  /* ---------------- tarih matematiği öz-testi (?/#selftest) ---------------- */
-  if (location.hash === '#selftest' || location.search.indexOf('selftest') >= 0) {
-    var checks = [];
-    function eq(actual, expected, label) {
-      checks.push({ ok: actual === expected, label: label, actual: actual, expected: expected });
-    }
-    eq(addPeriod('2026-01-31', 'monthly'), '2026-02-28', 'ay sonu kırpma');
-    eq(addPeriod('2026-01-31', 'monthly', 2), '2026-03-31', 'iki ay ileri');
-    eq(addPeriod('2026-12-15', 'yearly'), '2027-12-15', 'yıllık');
-    eq(addPeriod('2026-10-28', 'weekly'), '2026-11-04', 'haftalık');
-    eq(addPeriod('2028-02-29', 'yearly'), '2029-02-28', 'artık yıl');
-    eq(nextDateAfter('2026-01-10', 'monthly', '2026-03-15'), '2026-04-10', 'gecikmiş ödeme ileri taşınır');
-    eq(nextDateAfter('2026-10-01', 'monthly', '2026-10-15'), '2026-11-01', 'tek periyot ileri');
-    eq(Math.round(monthlyOf(120, 'yearly') * 100) / 100, 10, 'yıllık aylık karşılığı');
-    eq(validDate('2026-02-30'), false, 'geçersiz tarih');
-    var bad = checks.filter(function (c) { return !c.ok; });
-    if (bad.length) {
-      console.error('SELFTEST FAIL', bad);
-      checks.forEach(function (c) { if (!c.ok) console.log('✕', c.label, c.actual, '≠', c.expected); });
-    } else {
-      console.log('SELFTEST OK (' + checks.length + ' kontrol)');
-    }
-  }
-})();
-</script>
+<script src="js/core.js"></script>
+<script src="js/views.js"></script>
+<script src="js/main.js"></script>
 </body>
 </html>
