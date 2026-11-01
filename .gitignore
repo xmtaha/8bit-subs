@@ -1,0 +1,33 @@
+# Bağımlılıklar
+node_modules/
+
+# İşletim sistemi dosyaları
+.DS_Store
+Thumbs.db
+*.db
+
+# Günlük dosyaları
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Derleme / dağıtım klasörleri (gerekirse kullanılabilir)
+dist/
+build/
+out/
+
+# Yerel ortam ve gizli dosyalar
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# CodeGraph ve Graphify (yerel index ve çıktı, repoya girmez)
+.codegraph/
+graphify-out/
