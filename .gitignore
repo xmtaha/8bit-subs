@@ -28,6 +28,6 @@ out/
 *.swp
 *.swo
 
-# CodeGraph ve Graphify (yerel index ve çıktı, repoya girmez)
+# CodeGraph ve Graphify
 .codegraph/
 graphify-out/
