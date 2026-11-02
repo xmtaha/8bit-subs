@@ -25,7 +25,7 @@
     if (!s || s.status === 'cancelled') return;
     var today = todayStr();
     if (s.lastPaid === today) return;
-    s.history.push({ date: today, amount: s.amount });
+    s.history.push({ date: today, amount: s.amount, currency: s.currency });
     s.lastPaid = today;
     s.nextDate = nextDateAfter(s.nextDate, s.period, today);
     save();
@@ -69,6 +69,17 @@
     $('trialRow').hidden = !this.checked;
   });
 
+  function download(name, mime, content) {
+    var blob = new Blob([content], { type: mime });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
+  }
   $('btnExport').addEventListener('click', function () {
     var payload = {
       app: '8bit-subs', version: 2,
@@ -77,16 +88,26 @@
       settings: state.settings,
       subscriptions: state.subs
     };
-    var blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement('a');
-    a.href = url;
-    a.download = '8bit-subs-' + todayStr() + '.json';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
+    download('8bit-subs-' + todayStr() + '.json', 'application/json', JSON.stringify(payload, null, 2));
     toast('JSON İNDİRİLDİ');
+  });
+  $('btnCsv').addEventListener('click', function () {
+    var rows = [['Ad', 'Tutar', 'Para Birimi', 'Periyot', 'Kategori', 'Durum', 'Sonraki Ödeme',
+                 'Başlangıç', 'Ödeme Yöntemi', 'Ödeme Sayısı', 'Toplam Ödenen', 'Deneme Bitiş', 'Notlar']];
+    state.subs.forEach(function (s) {
+      rows.push([s.name, s.amount, s.currency, PERIOD[s.period].label, CAT[s.category].name,
+        s.status === 'cancelled' ? 'İptal Edildi' : 'Aktif', s.nextDate, s.startDate || '', s.payMethod || '',
+        s.history.length, spentOf(s), s.trial ? s.trial.endDate : '', s.notes]);
+    });
+    // BOM: Excel Türkçe karakterleri doğru okusun; ; ayraç: tr-TR ondalık/liste bölgesi uyumu
+    var csv = '\uFEFF' + rows.map(function (r) {
+      return r.map(function (c) {
+        c = String(c == null ? '' : c);
+        return /[",;\r\n]/.test(c) ? '"' + c.replace(/"/g, '""') + '"' : c;
+      }).join(';');
+    }).join('\r\n');
+    download('8bit-subs-' + todayStr() + '.csv', 'text/csv;charset=utf-8', csv);
+    toast('CSV İNDİRİLDİ');
   });
   $('btnImport').addEventListener('click', function () { fileInput.click(); });
 
@@ -270,6 +291,17 @@
     render();
   });
 
+  $('q').addEventListener('input', function () {
+    searchQ = this.value.trim();
+    render();
+  });
+
+  // PWA: https/localhost dışında (file://) sessizce atlanır
+  if ('serviceWorker' in navigator &&
+      (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+    navigator.serviceWorker.register('sw.js').catch(function () { /* file:// vb. */ });
+  }
+
   function handleAct(e) {
     var btn = e.target.closest('[data-act]');
     if (!btn) return;
@@ -355,6 +387,10 @@
     eq(Math.round(monthlyOf(600, 'semiannual') * 100) / 100, 100, 'altı aylık aylık karşılığı');
     eq(validDate('2026-02-30'), false, 'geçersiz tarih');
     eq(normalize({ name: 'X', amount: 5 }).period, 'monthly', 'v1 verisi normalize');
+    eq(normalize({ name: 'X', amount: 5, history: [{ date: '2026-01-01', amount: 2 }] }).history[0].currency,
+       'TRY', 'geçmiş kuru varsayılan');
+    eq(normalize({ name: 'X', amount: 5, currency: 'USD', history: [{ date: '2026-01-01', amount: 2, currency: 'EUR' }] })
+       .history[0].currency, 'EUR', 'geçmiş kuru saklanır');
     var bad = checks.filter(function (c) { return !c.ok; });
     if (bad.length) {
       console.error('SELFTEST FAIL', bad);

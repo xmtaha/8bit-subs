@@ -118,10 +118,13 @@
     var name = typeof v.name === 'string' ? v.name.trim().slice(0, 40) : '';
     var amount = Number(v.amount);
     if (!name || !isFinite(amount) || amount < 0) return null;
+    var cur = CURRENCIES.indexOf(v.currency) >= 0 ? v.currency : 'TRY';
     var history = Array.isArray(v.history) ? v.history.filter(function (h) {
       return h && validDate(h.date) && isFinite(Number(h.amount));
     }).map(function (h) {
-      return { date: h.date, amount: Number(h.amount) };
+      // geçmiş ödemenin kuru nerede varsa onu sakla; yoksa aboneliğin (şimdiki) kuru
+      return { date: h.date, amount: Number(h.amount),
+               currency: CURRENCIES.indexOf(h.currency) >= 0 ? h.currency : cur };
     }).slice(-500) : [];
     var trial = (v.trial && typeof v.trial === 'object' && validDate(v.trial.endDate))
       ? { endDate: v.trial.endDate } : null;
@@ -205,6 +208,7 @@
 
   var state = load();
   var filterCat = 'all';
+  var searchQ = '';
   var sortBy = 'date';
   var editingId = null;
   var expanded = {};
@@ -263,8 +267,14 @@
     return sum;
   }
   function visibleSubs() {
-    if (filterCat === 'unused') return state.subs.filter(function (s) { return s.unused; });
-    return state.subs.filter(function (s) { return filterCat === 'all' || s.category === filterCat; });
+    var q = searchQ.toLowerCase();
+    return state.subs.filter(function (s) {
+      if (filterCat === 'unused' ? !s.unused : filterCat !== 'all' && s.category !== filterCat) return false;
+      if (q && s.name.toLowerCase().indexOf(q) < 0 &&
+          (s.notes || '').toLowerCase().indexOf(q) < 0 &&
+          CAT[s.category].name.toLowerCase().indexOf(q) < 0) return false;
+      return true;
+    });
   }
 
 

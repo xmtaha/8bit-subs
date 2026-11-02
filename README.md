@@ -11,7 +11,11 @@ Tamamen yerel çalışan, tek tarayıcıda saklanan ve 8-bit estetiğinde tasarl
 - **İstatistikler**: Aylık harcama grafiği, yıllık harcama özeti, kategori bazlı harcama dağılımı, en pahalı abonelikler, aktif ve iptal edilmiş aboneliklerin karşılaştırması, iptallerden sağlanan tahmini tasarruf ve geçmiş ödeme kayıtları.
 - **Bütçe**: Aylık abonelik bütçesi belirleme, harcanan miktar gösterimi, kalan bütçe dinamik hesaplama, bütçe aşımında görsel uyarı ve kategori bazında harcama sınırı.
 - **Kullanılmayan Abonelikler**: Kullanıcı tarafından kullanılıyor veya kullanılmıyor olarak işaretleme, ayrı filtreleme ve bu aboneliklerin aylık ve yıllık maliyeti gösterimi.
-- **Yedekleme ve Veri Yönetimi**: JSON dışa ve içe aktarma, içe aktarma öncesi veri doğrulama, bozuk dosyanın reddi, içe aktarma öncesi mevcut verilerin otomatik yedeklenmesi, tüm veriyi sıfırlama onay ekranı ve otomatik yerel yedekleme.
+- **Yedekleme ve Veri Yönetimi**: JSON dışa ve içe aktarma, CSV dışa aktarma (Excel uyumlu), içe aktarma öncesi veri doğrulama, bozuk dosyanın reddi, içe aktarma öncesi mevcut verilerin otomatik yedeklenmesi, tüm veriyi sıfırlama onay ekranı ve otomatik yerel yedekleme.
+- **PWA**: Telefona kurulur, offline çalışır (service worker önbelleği).
+- **Arama**: Abonelik listesinde ad, not ve kategoriye göre anlık arama.
+- **Çok Para Birimi**: Ana para birimi dışındaki aktif aboneliklerin aylık yükü dashboard'da ayrı kartta gösterilir.
+- **Ödeme Geçmişi Kuru**: Her ödeme kaydı kendi para birimini saklar; abonelik kuru değişse bile geçmiş doğru gösterilir.
 
 ## Teknoloji Yığını
 
@@ -26,6 +30,7 @@ Tamamen yerel çalışan, tek tarayıcıda saklanan ve 8-bit estetiğinde tasarl
 - `js/core.js` — Sabitler, tarih matematiği, veri saklama ve yükleme
 - `js/views.js` — Görünüm renderleri ve bildirimler
 - `js/main.js` — Eylemler, olaylar ve başlatma
+- `manifest.webmanifest`, `sw.js`, `icon.svg` — PWA (kurulum + offline)
 
 ## Kurulum
 
@@ -39,7 +44,7 @@ Tüm veriler yalnızca bu tarayıcıda kalır. Tarayıcı verilerini temizlemek 
 
 ## Geliştirme Durumu
 
-Proje aşamalı olarak geliştirilmiştir. Mevcut sürüm: v2.0.
+Proje aşamalı olarak geliştirilmiştir. Mevcut sürüm: v2.1.
 
 ## Not
 

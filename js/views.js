@@ -51,6 +51,13 @@
     var budgetPct = budget ? Math.min(100, Math.round(cur / budget * 100)) : 0;
     var unusedList = state.subs.filter(function (s) { return s.unused && s.status === 'active' && s.currency === state.currency; });
     var unusedCost = unusedList.reduce(function (sum, s) { return sum + monthlyOf(s.amount, s.period); }, 0);
+    // seçili kur dışındaki abonelikler dashboard toplamlarına girmez — ayrı göster
+    var otherTotal = {};
+    state.subs.forEach(function (s) {
+      if (s.status !== 'active' || s.currency === state.currency) return;
+      otherTotal[s.currency] = (otherTotal[s.currency] || 0) + monthlyOf(s.amount, s.period);
+    });
+    var otherKeys = Object.keys(otherTotal).sort();
 
     statsEl.innerHTML =
       '<div class="stat"><span class="label">AYLIK GİDER · PLANLANAN</span>' +
@@ -86,6 +93,14 @@
       '<div class="stat"><span class="label">KULLANILMAYAN ABONELİKLER</span>' +
         '<span class="val small">' + unusedList.length + ' KAYIT</span>' +
         '<span class="note">BOŞA AKAN: ' + money(unusedCost, state.currency) + '/AY · ' + money(unusedCost * 12, state.currency) + '/YIL</span></div>' +
+      '<div class="stat"><span class="label">DİĞER PARA BİRİMLERİ · AYLIK</span>' +
+        (otherKeys.length
+          ? '<ul class="vlist">' + otherKeys.map(function (c) {
+              return '<li><b>' + esc(c) + '</b><span>' + money(otherTotal[c], c) + '</span></li>';
+            }).join('') + '</ul>' +
+            '<span class="note">' + state.currency + ' TOPLAMINA DAHİL DEĞİL</span>'
+          : '<span class="val small">YOK</span>' +
+            '<span class="note">' + state.currency + ' DIŞINDA AKTİF KAYIT YOK</span>') + '</div>' +
       '<div class="stat"><span class="label">BÜTÇE DURUMU' + (budget ? ' · ' + state.currency : '') + '</span>' +
         (budget
           ? '<div class="pbar' + (cur > budget ? ' over' : (budgetPct >= 80 ? ' warn' : '')) + '" style="margin:0 0 6px"><div class="fill" style="width:' + budgetPct + '%"></div></div>' +
@@ -189,7 +204,7 @@
     var open = !!expanded[s.id];
     var histRows = h.length
       ? h.slice().reverse().slice(0, 12).map(function (x) {
-          return '<li><span>' + dateLabel(x.date) + '</span><span>' + money(x.amount, s.currency) + '</span></li>';
+          return '<li><span>' + dateLabel(x.date) + '</span><span>' + money(x.amount, x.currency || s.currency) + '</span></li>';
         }).join('') + (h.length > 12 ? '<li><span>…</span><span>+' + (h.length - 12) + ' kayıt</span></li>' : '')
       : '<li class="none">Henüz ödeme kaydı yok.</li>';
 

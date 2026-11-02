@@ -5,17 +5,21 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>8-BIT SUBS · Abonelik Takibi</title>
 <link rel="stylesheet" href="style.css">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#0b0b16">
 </head>
 <body>
 <div class="wrap">
   <header class="hud">
     <div>
       <h1>8-BIT <span>SUBS</span></h1>
-      <p class="sub">ABONELİK TAKİP TERMİNALİ · v2.0</p>
+      <p class="sub">ABONELİK TAKİP TERMİNALİ · v2.1</p>
     </div>
     <div class="hud-actions">
       <button class="btn" id="btnImport">İçe Aktar</button>
       <button class="btn" id="btnExport">Dışa Aktar</button>
+      <button class="btn" id="btnCsv">CSV</button>
       <button class="btn primary" id="btnNew">+ Yeni Abonelik</button>
     </div>
   </header>
@@ -39,6 +43,7 @@
     <div class="toolbar">
       <div class="chips" id="chips" aria-label="Kategori filtresi"></div>
       <div class="sortbox">
+        <input id="q" type="search" placeholder="ARA…" aria-label="Abonelik ara">
         <select id="sortSel" aria-label="Sıralama">
           <option value="date">TARİHE GÖRE</option>
           <option value="amount">TUTARA GÖRE</option>
