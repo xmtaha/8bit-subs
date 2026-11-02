@@ -216,6 +216,16 @@
         '</span>';
     }
     var badges = '';
+    var trend = '';
+    if (h.length > 1) {
+      var firstAmt = h[0].amount, lastAmt = h[h.length - 1].amount;
+      if (lastAmt > firstAmt) {
+        var pct = Math.round((lastAmt - firstAmt) / firstAmt * 100);
+        trend = '<span style="color:var(--red)" title="İlk ödeme ' +
+          money(firstAmt, s.currency) + ' · Son ' + money(lastAmt, s.currency) +
+          '">▲ FİYAT +%' + pct + '</span>';
+      }
+    }
     if (s.unused && st !== 'cancelled') {
       badges += '<button class="badge" data-act="unused" title="Kullanılıyor olarak işaretle">KULLANILMIYOR</button>';
     }
@@ -238,6 +248,7 @@
         '<span>SIRADAKİ · ' + dateLabel(s.nextDate) + '</span>' +
         '<span class="rel' + (st === 'overdue' ? ' overdue' : '') + '">' + relLabel(d) + '</span>' +
         (s.payMethod ? '<span>' + esc(s.payMethod) + '</span>' : '') +
+        trend +
         trialTxt +
         (s.notes ? '<span title="' + esc(s.notes) + '">📝 NOT</span>' : '') +
       '</div>' +
@@ -379,6 +390,20 @@
         '<span class="val">' + money(plan * 12, state.currency) + '</span>' +
         '<span class="note">AKTİF KAYITLARDAN HESAPLANIR</span></div>';
 
+    // önümüzdeki 12 ayın planlanan ödeme projeksiyonu
+    var planMonths = plan12Monthly(activeInCur(), todayStr());
+    var planTotal = planMonths.reduce(function (a, b) { return a + b; }, 0);
+    $('planHint').textContent = planTotal ? state.currency + ' · TOPLAM ' + money(planTotal, state.currency) : 'ÖDEME YOK';
+    $('plan12').innerHTML = planTotal
+      ? [0, 6].map(function (off) {
+          return '<ul class="vlist">' + planMonths.slice(off, off + 6).map(function (v, i) {
+            var d = new Date(now.getFullYear(), now.getMonth() + off + i, 1);
+            return '<li><b>' + MONTHS_TR[d.getMonth()] + ' ' + d.getFullYear() + '</b><span>' +
+              (v ? money(Math.round(v), state.currency) : '—') + '</span></li>';
+          }).join('') + '</ul>';
+        }).join('')
+      : '<p class="empty-row">Önümüzdeki 12 ayda planlanmış ödeme yok.</p>';
+
     // kategori dağılımı (planlanan aylık, aktif)
     var byCat = {};
     activeInCur().forEach(function (s) {
@@ -502,12 +527,22 @@
     $('nD3').checked = n.d3;
     $('nD0').checked = n.d0;
     $('nTrial').checked = n.trial;
+    $('nOverdue').checked = n.overdue;
+    $('nBudgetw').checked = n.budgetw;
     updateNpStatus();
 
     var ab = loadJSON(AUTO_KEY);
     $('autoInfo').textContent = ab && ab.ts
       ? 'OTOMATİK YEDEK · ' + new Date(ab.ts).toLocaleString('tr-TR')
       : 'OTOMATİK YEDEK YOK';
+
+    var lb = localStorage.getItem(LASTBK_KEY) || '';
+    var days = NaN;
+    try { days = Math.round((Date.now() - new Date(lb).getTime()) / 86400000); } catch (e) { /* bozuk değer */ }
+    if (isNaN(days)) lb = '';
+    $('backupInfo').textContent = !lb ? 'JSON YEDEĞİ ALINMAMIŞ — Dışa Aktar ile dosyaya alın.'
+      : (days > 30 ? '⚠ SON JSON YEDEĞİ ' + days + ' GÜN ÖNCE — Yenilemen önerilir.'
+        : 'SON JSON YEDEĞİ ' + days + ' GÜN ÖNCE');
   }
   function updateNpStatus() {
     var el = $('npStatus');
@@ -552,7 +587,20 @@
         if (t === 0) fireNotification('t0:' + s.id + ':' + s.trial.endDate, s.name + ' (DENEME)',
           'Deneme bugün bitiyor — ücretliye dönecek', sent, fresh);
       }
+      if (n.overdue && s.nextDate < today && s.lastPaid !== today) {
+        fireNotification('ov:' + s.id + ':' + s.nextDate, s.name + ' (GEÇİKMİŞ)',
+          'Ödeme ' + Math.abs(daysUntil(s.nextDate)) + ' gün gecikti · ' + money(s.amount, s.currency), sent, fresh);
+      }
     });
+    if (n.budgetw) {
+      var bd = state.settings.budget;
+      var nowD = new Date();
+      var spentM = monthSpend(nowD.getFullYear(), nowD.getMonth());
+      if (bd && spentM > bd) {
+        fireNotification('b:' + nowD.getFullYear() + '-' + pad(nowD.getMonth() + 1), 'BÜTÇE AŞILDI',
+          'Bu ay ' + money(spentM, state.currency) + ' harcandı · bütçe ' + money(bd, state.currency), sent, fresh);
+      }
+    }
     var keys = Object.keys(fresh);
     if (keys.length) {
       Object.keys(sent).forEach(function (k) { fresh[k] = 1; }); // eski + yeni birleştir

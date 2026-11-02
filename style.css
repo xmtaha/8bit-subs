@@ -218,6 +218,9 @@
          border:2px solid #d9ffe9;box-shadow:4px 4px 0 #000;opacity:0;pointer-events:none;transition:.16s}
   #toast.on{opacity:1;transform:translate(-50%,0)}
 
+  #toast .btn{background:#04120b;color:var(--acc);border-color:transparent;box-shadow:2px 2px 0 rgba(0,0,0,.5)}
+  #toast .btn:hover{color:var(--acc);border-color:transparent}
+
   @media (max-width:860px){
     .stats{grid-template-columns:repeat(2,1fr);gap:10px}
     .stat{padding:11px}

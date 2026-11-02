@@ -8,6 +8,7 @@
   var AUTO_KEY = '8bit-subs.autobackup'; // otomatik yerel yedek
   var SNAP_KEY = '8bit-subs.snapshot';   // içe aktarma öncesi yedek
   var NOTIF_KEY = '8bit-subs.notifs';    // gönderilen bildirim anahtarları (tekrar önleme)
+  var LASTBK_KEY = '8bit-subs.lastbackup'; // son JSON dışa aktarma zamanı
   var CATS = [
     ['ent', 'Eğlence', 'ENT', '🎬'],
     ['muz', 'Müzik', 'MZK', '🎵'],
@@ -67,6 +68,23 @@
   }
   function daysUntil(dateStr) {
     return Math.round((parseDate(dateStr) - parseDate(todayStr())) / 86400000);
+  }
+  // Önümüzdeki 12 ayın aylık planlanan ödeme dizisi; gecikmiş vadeler bu aya biner.
+  function plan12Monthly(subs, today) {
+    var t = parseDate(today);
+    var months = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    var horizon = addPeriod(today, 'monthly', 12);
+    subs.forEach(function (s) {
+      var d = s.nextDate;
+      var guard = 0;
+      while (d < horizon && guard++ < 200) {
+        var dt = parseDate(d);
+        var idx = (dt.getFullYear() - t.getFullYear()) * 12 + (dt.getMonth() - t.getMonth());
+        if (idx < 12) months[Math.max(0, idx)] += s.amount;
+        d = addPeriod(d, s.period);
+      }
+    });
+    return months;
   }
   // Ödeme yapıldığında sıradaki tarih: bir periyot ilerlet, geçmişte kalırsa bugünü geçene kadar ilerlet.
   function nextDateAfter(nextDate, period, today) {
@@ -151,7 +169,7 @@
   }
 
   function defaultSettings() {
-    return { budget: null, catLimits: {}, notif: { enabled: false, d3: true, d0: true, trial: true } };
+    return { budget: null, catLimits: {}, notif: { enabled: false, d3: true, d0: true, trial: true, budgetw: true, overdue: true } };
   }
   function normalizeSettings(s) {
     var d = defaultSettings();
@@ -168,6 +186,9 @@
       d.notif.d3 = !!s.notif.d3;
       d.notif.d0 = !!s.notif.d0;
       d.notif.trial = !!s.notif.trial;
+      // yeni alanlar: eski kayıtta yoksa açık varsay
+      d.notif.budgetw = s.notif.budgetw !== undefined ? !!s.notif.budgetw : true;
+      d.notif.overdue = s.notif.overdue !== undefined ? !!s.notif.overdue : true;
     }
     return d;
   }
@@ -227,12 +248,21 @@
   var overdueListEl = $('overdueList'), weekListEl = $('weekList');
 
   /* ---------------- yardımcılar ---------------- */
-  function toast(msg) {
+  function toast(msg, undoFn) {
     var t = $('toast');
-    t.textContent = msg;
+    if (undoFn) {
+      t.innerHTML = esc(msg) + ' <button type="button" class="btn mini" id="toastUndo">GERİ AL</button>';
+      $('toastUndo').addEventListener('click', function () {
+        clearTimeout(toastTimer);
+        t.classList.remove('on');
+        undoFn();
+      });
+    } else {
+      t.textContent = msg;
+    }
     t.classList.add('on');
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(function () { t.classList.remove('on'); }, 2400);
+    toastTimer = setTimeout(function () { t.classList.remove('on'); }, undoFn ? 6000 : 2400);
   }
   function statusOf(s, today) {
     if (s.status === 'cancelled') return 'cancelled';

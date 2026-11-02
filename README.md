@@ -16,6 +16,12 @@ Tamamen yerel çalışan, tek tarayıcıda saklanan ve 8-bit estetiğinde tasarl
 - **Arama**: Abonelik listesinde ad, not ve kategoriye göre anlık arama.
 - **Çok Para Birimi**: Ana para birimi dışındaki aktif aboneliklerin aylık yükü dashboard'da ayrı kartta gösterilir.
 - **Ödeme Geçmişi Kuru**: Her ödeme kaydı kendi para birimini saklar; abonelik kuru değişse bile geçmiş doğru gösterilir.
+- **12 Ay Ödeme Projesi**: Önümüzdeki 12 ayın aylık planlanan ödemeleri ve toplam yıllık yük.
+- **Fiyat Artışı Uyarısı**: Kart üstünde ilk-son ödeme karşılaştırmalı zamlı abonelik işareti.
+- **Geri Alınabilir Silme**: Sildikten sonra toast içinde 6 sn "GERİ AL" fırsatı; onay penceresi kaldırıldı.
+- **Yedek Hatırlatma**: Son JSON yedeği ne zaman alındı; 30 günü aşarsa uyarı.
+- **Bildirim Seti**: Gecikmiş ödeme ve bütçe aşımı uyarıları (kapatılabilir).
+- **PWA**: Telefona kurulur, offline çalışır (service worker önbelleği).
 
 ## Teknoloji Yığını
 

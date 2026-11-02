@@ -1,5 +1,5 @@
 /* 8-BIT SUBS · service worker: offline önbellek */
-var CACHE = '8bit-subs.v1';
+var CACHE = '8bit-subs.v2';
 var ASSETS = [
   './', 'index.html', 'style.css', 'icon.svg', 'manifest.webmanifest',
   'js/core.js', 'js/views.js', 'js/main.js'

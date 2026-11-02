@@ -33,14 +33,21 @@
     toast(s.name.toLocaleUpperCase('tr-TR') + ' ÖDENDİ · SIRADAKİ ' + dateLabel(s.nextDate));
   }
 
+  var lastDeleted = null;
   function remove(id) {
     var s = state.subs.find(function (x) { return x.id === id; });
     if (!s) return;
-    if (!confirm('"' + s.name + '" silinsin mi? Ödeme geçmişi de silinir.')) return;
     state.subs = state.subs.filter(function (x) { return x.id !== id; });
+    lastDeleted = s;
     save();
     render();
-    toast('SİLİNDİ');
+    toast('SİLİNDİ · ' + s.name.toLocaleUpperCase('tr-TR'), function () {
+      state.subs.push(lastDeleted);
+      lastDeleted = null;
+      save();
+      render();
+      toast('GERİ ALINDI');
+    });
   }
 
   function toggleHist(id) {
@@ -89,6 +96,7 @@
       subscriptions: state.subs
     };
     download('8bit-subs-' + todayStr() + '.json', 'application/json', JSON.stringify(payload, null, 2));
+    try { localStorage.setItem(LASTBK_KEY, new Date().toISOString()); } catch (e) { /* yoksay */ }
     toast('JSON İNDİRİLDİ');
   });
   $('btnCsv').addEventListener('click', function () {
@@ -171,7 +179,7 @@
     resetArmed = false;
     this.textContent = 'TÜM VERİYİ SIFIRLA';
     if (!confirm('TÜM abonelikler, geçmiş, bütçe ve ayarlar silinecek. Bu işlem geri alınamaz. Devam edilsin mi?')) return;
-    [LS_KEY, SET_KEY, NOTIF_KEY].forEach(function (k) { try { localStorage.removeItem(k); } catch (e) {} });
+    [LS_KEY, SET_KEY, NOTIF_KEY, LASTBK_KEY].forEach(function (k) { try { localStorage.removeItem(k); } catch (e) {} });
     state = load();
     filterCat = 'all';
     render();
@@ -249,7 +257,7 @@
     save();
     renderSettingsView();
   });
-  ['nD3', 'nD0', 'nTrial'].forEach(function (id) {
+  ['nD3', 'nD0', 'nTrial', 'nOverdue', 'nBudgetw'].forEach(function (id) {
     $(id).addEventListener('change', function () {
       state.settings.notif[id.slice(1).toLowerCase()] = this.checked;
       save();
@@ -385,6 +393,15 @@
     eq(Math.round(monthlyOf(120, 'yearly') * 100) / 100, 10, 'yıllık aylık karşılığı');
     eq(Math.round(monthlyOf(300, 'quarterly') * 100) / 100, 100, 'üç aylık aylık karşılığı');
     eq(Math.round(monthlyOf(600, 'semiannual') * 100) / 100, 100, 'altı aylık aylık karşılığı');
+    var p12 = plan12Monthly([{ nextDate: '2026-01-15', period: 'monthly', amount: 100 }], '2026-01-01');
+    eq(p12.length, 12, 'plan 12 ay uzunluk');
+    eq(p12[0], 100, 'plan mevcut ay');
+    eq(p12[11], 100, 'plan 12. ay');
+    var py12 = plan12Monthly([{ nextDate: '2026-03-20', period: 'yearly', amount: 240 }], '2026-01-01');
+    eq(py12[2], 240, 'yıllık tek vade');
+    eq(py12[3], 0, 'yıllık diğer aylar');
+    var po12 = plan12Monthly([{ nextDate: '2025-11-15', period: 'monthly', amount: 100 }], '2026-01-01');
+    eq(po12[0], 300, 'gecikmiş vadeler bu aya biner');
     eq(validDate('2026-02-30'), false, 'geçersiz tarih');
     eq(normalize({ name: 'X', amount: 5 }).period, 'monthly', 'v1 verisi normalize');
     eq(normalize({ name: 'X', amount: 5, history: [{ date: '2026-01-01', amount: 2 }] }).history[0].currency,

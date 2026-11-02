@@ -14,7 +14,7 @@
   <header class="hud">
     <div>
       <h1>8-BIT <span>SUBS</span></h1>
-      <p class="sub">ABONELİK TAKİP TERMİNALİ · v2.1</p>
+      <p class="sub">ABONELİK TAKİP TERMİNALİ · v2.2</p>
     </div>
     <div class="hud-actions">
       <button class="btn" id="btnImport">İçe Aktar</button>
@@ -88,6 +88,10 @@
       <div class="panel-head"><h2>AYLIK HARCAMA · SON 12 AY (GERÇEKLEŞEN)</h2><span class="hint" id="chartHint"></span></div>
       <div class="bars" id="chartBars"></div>
     </section>
+    <section class="panel" aria-label="Yıllık özet">
+      <div class="panel-head"><h2>ÖNÜMÜZDEKİ 12 AY · PLANLANAN ÖDEMELER</h2><span class="hint" id="planHint"></span></div>
+      <div class="grid2" id="plan12"></div>
+    </section>
     <div class="grid2">
       <section class="panel" aria-label="Yıllık özet">
         <div class="panel-head"><h2>YILLIK ÖZET</h2></div>
@@ -149,11 +153,14 @@
       <label class="chk"><input type="checkbox" id="nD3"> Ödemeden 3 gün önce hatırlat</label>
       <label class="chk"><input type="checkbox" id="nD0"> Ödeme günü hatırlat</label>
       <label class="chk"><input type="checkbox" id="nTrial"> Ücretsiz deneme bitişine yakın uyar</label>
+      <label class="chk"><input type="checkbox" id="nOverdue"> Gecikmiş ödeme uyarısı</label>
+      <label class="chk"><input type="checkbox" id="nBudgetw"> Bütçe aşımında uyar</label>
       <div class="srow"><button class="btn" id="npBtn">İZİN İSTE</button></div>
       <p class="hint">Bildirimler uygulama açıkken / sekme arka plandayken çalışır. Uygulama tamamen kapalıyken bildirim garantisi yoktur — tarayıcı bildirim API'sinin sınırı budur.</p>
     </section>
     <section class="panel" aria-label="Veri yönetimi">
       <div class="panel-head"><h2>VERİ</h2><span class="hint" id="autoInfo"></span></div>
+      <span class="hint" id="backupInfo"></span>
       <div class="acts">
         <button class="btn" id="btnRestoreSnap">İÇE AKTARMA ÖNCESİ YEDEĞİ GERİ YÜKLE</button>
         <button class="btn" id="btnRestoreAuto">OTOMATİK YEDEĞİ GERİ YÜKLE</button>
