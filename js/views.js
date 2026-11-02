@@ -13,7 +13,20 @@
     document.querySelectorAll('.navbtn').forEach(function (b) { b.classList.toggle('on', b.dataset.view === v); });
     renderView(v);
   }
-  function render() { renderView(curView); }
+  function render() {
+    renderView(curView);
+    updateBadge();
+  }
+  // PWA taskbar badge: 7 gün içinde ödenecek aktif kayıt sayısı
+  function updateBadge() {
+    if (!navigator.setAppBadge) return;
+    var t = todayStr();
+    var n = state.subs.filter(function (s) {
+      return s.status === 'active' && s.lastPaid !== t &&
+        daysUntil(s.nextDate) >= 0 && daysUntil(s.nextDate) <= 7;
+    }).length;
+    if (n) navigator.setAppBadge(n); else navigator.clearAppBadge();
+  }
   function renderView(v) {
     var today = todayStr();
     if (v === 'dash') renderDashboard(today);
@@ -58,6 +71,11 @@
       otherTotal[s.currency] = (otherTotal[s.currency] || 0) + monthlyOf(s.amount, s.period);
     });
     var otherKeys = Object.keys(otherTotal).sort();
+    // ECB kur cache'iyle birleşik toplam (1 USD/EUR/GBP kaç TRY)
+    var fx = fxLoad(), fxSrc = null, otherTrySum = 0;
+    otherKeys.forEach(function (c) { var r = fxTryOf(c, fx); if (r) otherTrySum += otherTotal[c] * r; });
+    if (otherTrySum > 0) fxSrc = 'KUR ÇEV. TOPLAM: ' + money(otherTrySum, state.currency) +
+      ' · ECB · ' + new Date(fx.ts).toLocaleDateString('tr-TR');
 
     statsEl.innerHTML =
       '<div class="stat"><span class="label">AYLIK GİDER · PLANLANAN</span>' +
@@ -98,7 +116,7 @@
           ? '<ul class="vlist">' + otherKeys.map(function (c) {
               return '<li><b>' + esc(c) + '</b><span>' + money(otherTotal[c], c) + '</span></li>';
             }).join('') + '</ul>' +
-            '<span class="note">' + state.currency + ' TOPLAMINA DAHİL DEĞİL</span>'
+            '<span class="note">' + (fxSrc || (otherKeys.length ? 'KUR YOK · OFFLINE İLK ÇEKİMDE GELİR' : state.currency + ' DIŞINDA AKTİF KAYIT YOK')) + '</span>'
           : '<span class="val small">YOK</span>' +
             '<span class="note">' + state.currency + ' DIŞINDA AKTİF KAYIT YOK</span>') + '</div>' +
       '<div class="stat"><span class="label">BÜTÇE DURUMU' + (budget ? ' · ' + state.currency : '') + '</span>' +
@@ -256,6 +274,7 @@
         '<span class="spent">' + (h.length ? h.length + ' ÖDEME · ' + money(spent, s.currency) : 'KAYIT YOK') + '</span>' +
         '<div class="acts">' +
           '<button class="btn mini" data-act="pay"' + (st === 'paid' || st === 'cancelled' ? ' disabled' : '') + '>✓ Öde</button>' +
+          (st === 'cancelled' ? '' : '<button class="btn mini" data-act="payhist" title="Geçmiş bir tarihe ödeme kaydet">✚ Geçmişe</button>') +
           '<button class="btn mini" data-act="hist" aria-expanded="' + open + '">Geçmiş</button>' +
           (st === 'cancelled' ? '' :
             '<button class="btn mini" data-act="unused" title="Kullanım işaretini değiştir">' +

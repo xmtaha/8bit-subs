@@ -21,6 +21,10 @@ Tamamen yerel çalışan, tek tarayıcıda saklanan ve 8-bit estetiğinde tasarl
 - **Geri Alınabilir Silme**: Sildikten sonra toast içinde 6 sn "GERİ AL" fırsatı; onay penceresi kaldırıldı.
 - **Yedek Hatırlatma**: Son JSON yedeği ne zaman alındı; 30 günü aşarsa uyarı.
 - **Bildirim Seti**: Gecikmiş ödeme ve bütçe aşımı uyarıları (kapatılabilir).
+- **Geçmişe Ödeme**: İstediğin tarihe ödeme kaydı; vade sonrasıysa sıradaki ödeme otomatik ilerler.
+- **CSV İçe Aktarma**: Excel'den geri dönüş; ödeme geçmişini içermez (JSON kullan).
+- **Günlük Kur**: EUR/USD/GBP kurları ECB'den günde 1 kez çekilir; çoklu para birimi tek TL toplamına çevrilir.
+- **App Badge**: PWA taskbar ikonunda 7 gün içindeki ödeme sayısı.
 - **PWA**: Telefona kurulur, offline çalışır (service worker önbelleği).
 
 ## Teknoloji Yığını
@@ -50,7 +54,7 @@ Tüm veriler yalnızca bu tarayıcıda kalır. Tarayıcı verilerini temizlemek 
 
 ## Geliştirme Durumu
 
-Proje aşamalı olarak geliştirilmiştir. Mevcut sürüm: v2.1.
+Proje aşamalı olarak geliştirilmiştir. Mevcut sürüm: v2.3.
 
 ## Not
 

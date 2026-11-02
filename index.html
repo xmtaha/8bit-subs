@@ -14,7 +14,7 @@
   <header class="hud">
     <div>
       <h1>8-BIT <span>SUBS</span></h1>
-      <p class="sub">ABONELİK TAKİP TERMİNALİ · v2.2</p>
+      <p class="sub">ABONELİK TAKİP TERMİNALİ · v2.3</p>
     </div>
     <div class="hud-actions">
       <button class="btn" id="btnImport">İçe Aktar</button>
@@ -246,7 +246,26 @@
 </dialog>
 
 <div id="toast" role="status" aria-live="polite"></div>
-<input type="file" id="fileInput" accept=".json,application/json" hidden>
+
+<dialog class="modal" id="payDlg">
+  <form id="payForm">
+    <h2 id="payTitle">GEÇMİŞE ÖDEME</h2>
+    <div class="row">
+      <label>ÖDEME TARİHİ
+        <input id="payDate" type="date" required>
+      </label>
+      <label>TUTAR
+        <input id="payAmt" type="number" min="0.01" step="0.01" required inputmode="decimal">
+      </label>
+    </div>
+    <p class="hint" id="payHint"></p>
+    <div class="modal-actions">
+      <button type="button" class="btn" id="payCancel">Vazgeç</button>
+      <button type="submit" class="btn primary">Kaydet</button>
+    </div>
+  </form>
+</dialog>
+<input type="file" id="fileInput" accept=".json,.csv" hidden>
 
 <script src="js/core.js"></script>
 <script src="js/views.js"></script>

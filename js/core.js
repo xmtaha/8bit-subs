@@ -9,6 +9,7 @@
   var SNAP_KEY = '8bit-subs.snapshot';   // içe aktarma öncesi yedek
   var NOTIF_KEY = '8bit-subs.notifs';    // gönderilen bildirim anahtarları (tekrar önleme)
   var LASTBK_KEY = '8bit-subs.lastbackup'; // son JSON dışa aktarma zamanı
+  var FX_KEY = '8bit-subs.fx';           // döviz kuru cache (ECB/frankfurter, günde 1)
   var CATS = [
     ['ent', 'Eğlence', 'ENT', '🎬'],
     ['muz', 'Müzik', 'MZK', '🎵'],
@@ -99,6 +100,25 @@
     if (period === 'semiannual') return amount / 6;
     if (period === 'yearly') return amount / 12;
     return amount;
+  }
+  // Kur cache'i: fx.rates[cur] = 1 birim cur kaç TRY (frankfurter base=TRY'den ters çevrilir)
+  function fxLoad() { return loadJSON(FX_KEY); }
+  function fxFresh(fx) { return !!fx && !!fx.ts && (Date.now() - fx.ts) < 86400000; }
+  function fxTryOf(cur, fx) {
+    fx = fx || fxLoad();
+    return (fx && fx.rates && isFinite(fx.rates[cur])) ? fx.rates[cur] : null;
+  }
+  // Geçmişe/diary day ödeme kaydı: tarihi geçerli ≤ bugün olmalı.
+  // Tarih sıradaki vadeye gelmişse (>= nextDate) sonraki vade kaydırılır; erken ödde sadece kayıt.
+  function payAt(s, dateStr, amount) {
+    if (!s || s.status === 'cancelled') return false;
+    if (!validDate(dateStr) || dateStr > todayStr() || dateStr < '2000-01-01') return false;
+    if (!isFinite(Number(amount)) || Number(amount) <= 0) return false;
+    s.history.push({ date: dateStr, amount: Number(amount), currency: s.currency });
+    s.history.sort(function (a, b) { return a.date.localeCompare(b.date); });
+    if (dateStr >= s.nextDate) s.nextDate = nextDateAfter(s.nextDate, s.period, dateStr);
+    if (dateStr === todayStr()) s.lastPaid = dateStr;
+    return true;
   }
   function money(n, cur) {
     try {

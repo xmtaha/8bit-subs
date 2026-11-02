@@ -22,15 +22,23 @@
 
   function pay(id) {
     var s = state.subs.find(function (x) { return x.id === id; });
-    if (!s || s.status === 'cancelled') return;
-    var today = todayStr();
-    if (s.lastPaid === today) return;
-    s.history.push({ date: today, amount: s.amount, currency: s.currency });
-    s.lastPaid = today;
-    s.nextDate = nextDateAfter(s.nextDate, s.period, today);
+    if (!s || !payAt(s, todayStr(), s.amount)) return;
     save();
     render();
     toast(s.name.toLocaleUpperCase('tr-TR') + ' ÖDENDİ · SIRADAKİ ' + dateLabel(s.nextDate));
+  }
+
+  var payDlgSub = null;
+  function openPayForm(id) {
+    payDlgSub = state.subs.find(function (x) { return x.id === id; });
+    if (!payDlgSub || payDlgSub.status === 'cancelled') return;
+    $('payTitle').textContent = payDlgSub.name.toLocaleUpperCase('tr-TR') + ' · GEÇMİŞE ÖDEME';
+    var pd = $('payDate');
+    pd.max = todayStr();
+    pd.value = payDlgSub.nextDate <= todayStr() ? payDlgSub.nextDate : todayStr();
+    $('payAmt').value = payDlgSub.amount;
+    $('payHint').textContent = 'Sıradaki vade: ' + dateLabel(payDlgSub.nextDate) + ' · kaydettiğin tarih o vadeden sonraysa sıradaki ödeme ilerler.';
+    payDlg.showModal();
   }
 
   var lastDeleted = null;
@@ -72,6 +80,15 @@
 
   $('btnNew').addEventListener('click', function () { openForm(null); });
   $('btnCancel').addEventListener('click', function () { dlg.close(); });
+  $('payCancel').addEventListener('click', function () { payDlg.close(); });
+  $('payForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    if (!payAt(payDlgSub, $('payDate').value, Number($('payAmt').value))) { toast('GEÇERSİZ TARİH/TUTAR'); return; }
+    save();
+    payDlg.close();
+    render();
+    toast('ÖDEME KAYDEDİLDİ · ' + dateLabel($('payDate').value));
+  });
   $('form').elements.isTrial.addEventListener('change', function () {
     $('trialRow').hidden = !this.checked;
   });
@@ -122,14 +139,28 @@
   fileInput.addEventListener('change', function () {
     var file = fileInput.files && fileInput.files[0];
     if (!file) return;
+    var isCsv = /\.csv$/i.test(file.name);
     file.text().then(function (txt) {
-      var j = JSON.parse(txt); // bozuk JSON burada reddedilir
-      var arr = Array.isArray(j) ? j : (j && Array.isArray(j.subscriptions) ? j.subscriptions : null);
-      if (!arr) throw new Error('JSON içinde "subscriptions" dizisi yok');
-      var subs = arr.map(normalize).filter(Boolean);
+      var subs, currency, settings;
+      if (isCsv) {
+        // CSV içe aktarım: ödeme geçmişi/ayarları içermez
+        var rows = parseCsv(txt);
+        if (!rows.length || rows[0][0] && rows[0][0].toLowerCase().indexOf('ad') < 0) throw new Error('CSV başlık satırı bulunamadı');
+        csvHeader = rows[0] || [];
+        subs = rows.slice(1).filter(function (r) { return r.length && r[0].trim(); }).map(ccToSub).map(normalize).filter(Boolean);
+        currency = null; settings = null;
+      } else {
+        var j = JSON.parse(txt); // bozuk JSON burada reddedilir
+        var arr = Array.isArray(j) ? j : (j && Array.isArray(j.subscriptions) ? j.subscriptions : null);
+        if (!arr) throw new Error('JSON içinde "subscriptions" dizisi yok');
+        subs = arr.map(normalize).filter(Boolean);
+        currency = (!Array.isArray(j) && j && CURRENCIES.indexOf(j.currency) >= 0) ? j.currency : null;
+        settings = j && j.settings;
+      }
       if (!subs.length) throw new Error('geçerli abonelik kaydı bulunamadı');
       if (!confirm(subs.length + ' abonelik içe aktarılacak. Mevcut ' + state.subs.length +
-                   ' kayıt değiştirilecek. Devam edilsin mi?')) return;
+                   ' kayıt değiştirilecek.' + (isCsv ? ' CSV ödeme geçmişini içermez.' : '') +
+                   ' Devam edilsin mi?')) return;
       // içe aktarma öncesi mevcut veriyi yedekle
       try {
         localStorage.setItem(SNAP_KEY, JSON.stringify({
@@ -138,8 +169,8 @@
         }));
       } catch (e) { /* depo doluysa içe aktarmayı engelleme */ }
       state.subs = subs;
-      if (!Array.isArray(j) && j && CURRENCIES.indexOf(j.currency) >= 0) state.currency = j.currency;
-      state.settings = normalizeSettings(j && j.settings);
+      if (currency) state.currency = currency;
+      state.settings = normalizeSettings(settings);
       save();
       render();
       toast(subs.length + ' ABONELİK YÜKLENDİ · ÖNCEKİ VERİ YEDEKLENDİ');
@@ -149,6 +180,68 @@
       fileInput.value = '';
     });
   });
+
+  // CSV metni → dizi dizisi; nokta/virgül ayraç, tırnak ve CRLF desteği
+  function parseCsv(text) {
+    text = text.replace(/^\uFEFF/, '');
+    var head = text.split('\n')[0] || '';
+    var delim = (head.split(';').length >= head.split(',').length) ? ';' : ',';
+    var rows = [], row = [], cell = '', inQ = false;
+    for (var i = 0; i < text.length; i++) {
+      var c = text[i];
+      if (inQ) {
+        if (c === '"') {
+          if (text[i + 1] === '"') { cell += '"'; i++; }
+          else inQ = false;
+        } else cell += c;
+      } else if (c === '"') inQ = true;
+      else if (c === delim) { row.push(cell); cell = ''; }
+      else if (c === '\n') {
+        if (cell.charAt(cell.length - 1) === '\r') cell = cell.slice(0, -1);
+        row.push(cell); cell = '';
+        if (row.some(function (x) { return x !== ''; })) rows.push(row);
+        row = [];
+      } else cell += c;
+    }
+    if (cell !== '' || row.length) {
+      if (cell.charAt(cell.length - 1) === '\r') cell = cell.slice(0, -1);
+      row.push(cell);
+      if (row.some(function (x) { return x !== ''; })) rows.push(row);
+    }
+    return rows;
+  }
+  // export CSV başlıklarıyla birebir: başlık varsa pozisyondan, yoksa varsayılan kolondan okur
+  function csvCol(k, d) {
+    var i = (csvHeader || []).indexOf(k);
+    return i >= 0 ? i : d;
+  }
+  function csvNum(v) {
+    v = String(v || '').replace(/\s/g, '');
+    if (v.indexOf(',') >= 0 && v.indexOf('.') >= 0) v = v.replace(/\./g, '').replace(',', '.');
+    else v = v.replace(',', '.');
+    return Number(v);
+  }
+  function ccToSub(r) {
+    var per = r[csvCol('Periyot', 3)] || '';
+    var period = PERIOD[per] ? per : Object.keys(PERIOD).filter(function (k) { return PERIOD[k].label === per; })[0] || 'monthly';
+    var catName = r[csvCol('Kategori', 4)] || '';
+    var cat = CATS.filter(function (c) { return c[1] === catName; })[0];
+    var st = r[csvCol('Durum', 5)] || '';
+    var cur = r[csvCol('Para Birimi', 2)] || '';
+    var pm = r[csvCol('Ödeme Yöntemi', 8)] || '';
+    var trialEnd = r[csvCol('Deneme Bitiş', 11)] || '';
+    return {
+      name: r[csvCol('Ad', 0)], amount: csvNum(r[csvCol('Tutar', 1)]),
+      currency: CURRENCIES.indexOf(cur) >= 0 ? cur : undefined,
+      period: period, category: cat ? cat[0] : 'dgr',
+      status: st === 'İptal Edildi' ? 'cancelled' : 'active',
+      nextDate: r[csvCol('Sonraki Ödeme', 6)], startDate: r[csvCol('Başlangıç', 7)] || '',
+      payMethod: METHODS.indexOf(pm) >= 0 ? pm : '',
+      isTrial: !!trialEnd, trial: trialEnd ? { endDate: trialEnd } : null,
+      notes: r[csvCol('Notlar', 12)] || ''
+    };
+  }
+  var csvHeader = [];
 
   function restoreFrom(key, label) {
     var j = loadJSON(key);
@@ -179,7 +272,7 @@
     resetArmed = false;
     this.textContent = 'TÜM VERİYİ SIFIRLA';
     if (!confirm('TÜM abonelikler, geçmiş, bütçe ve ayarlar silinecek. Bu işlem geri alınamaz. Devam edilsin mi?')) return;
-    [LS_KEY, SET_KEY, NOTIF_KEY, LASTBK_KEY].forEach(function (k) { try { localStorage.removeItem(k); } catch (e) {} });
+    [LS_KEY, SET_KEY, NOTIF_KEY, LASTBK_KEY, FX_KEY].forEach(function (k) { try { localStorage.removeItem(k); } catch (e) {} });
     state = load();
     filterCat = 'all';
     render();
@@ -310,6 +403,22 @@
     navigator.serviceWorker.register('sw.js').catch(function () { /* file:// vb. */ });
   }
 
+  // Döviz kuru: günde en fazla 1 kez ECB/frankfurter'den; offline'ı sessiz geç, cache'e bak
+  function refreshFx() {
+    if (fxFresh(fxLoad())) return;
+    fetch('https://api.frankfurter.dev/v1/latest?base=TRY&symbols=USD,EUR,GBP')
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) {
+        if (!j || !j.rates || !j.rates.USD) return;
+        var rates = {};
+        ['USD', 'EUR', 'GBP'].forEach(function (c) { if (j.rates[c]) rates[c] = 1 / j.rates[c]; });
+        localStorage.setItem(FX_KEY, JSON.stringify({ ts: Date.now(), rates: rates }));
+        render();
+      }).catch(function () { });
+  }
+  refreshFx();
+  setInterval(refreshFx, 3600000);
+
   function handleAct(e) {
     var btn = e.target.closest('[data-act]');
     if (!btn) return;
@@ -318,6 +427,7 @@
     var id = card.dataset.id;
     var act = btn.dataset.act;
     if (act === 'pay') pay(id);
+    else if (act === 'payhist') openPayForm(id);
     else if (act === 'edit') openForm(state.subs.find(function (x) { return x.id === id; }));
     else if (act === 'del') remove(id);
     else if (act === 'hist') toggleHist(id);
@@ -408,6 +518,21 @@
        'TRY', 'geçmiş kuru varsayılan');
     eq(normalize({ name: 'X', amount: 5, currency: 'USD', history: [{ date: '2026-01-01', amount: 2, currency: 'EUR' }] })
        .history[0].currency, 'EUR', 'geçmiş kuru saklanır');
+    var ps = { status: 'active', nextDate: '2026-03-15', period: 'monthly', history: [], currency: 'TRY', amount: 100 };
+    eq(payAt(ps, '2026-03-20', 100), true, 'geçmişe ödeme kabul');
+    eq(ps.nextDate, '2026-04-15', 'vade kaydırılır');
+    eq(ps.history[0].currency, 'TRY', 'ödemede kur anında saklanır');
+    var pe = { status: 'active', nextDate: '2026-03-15', period: 'monthly', history: [], currency: 'TRY', amount: 100 };
+    eq(payAt(pe, '2026-03-10', 100), true, 'erken ödeme kabul');
+    eq(pe.nextDate, '2026-03-15', 'erken ödeme vadı ilerlemez');
+    eq(payAt({ status: 'active', nextDate: '2026-03-15', period: 'monthly', history: [] }, '2026-99-01', 5), false, 'geçersiz tarih reddi');
+    eq(payAt({ status: 'cancelled', nextDate: '2026-03-15', period: 'monthly', history: [] }, '2026-03-15', 5), false, 'iptal reddi');
+    eq(parseCsv('a;b\r\n1;"cı;d"')[1][1], 'cı;d', 'csv tırnak escape');
+    eq(parseCsv('a,b\nx,y,z').length, 2, 'csv satır sayımı');
+    var fxT = { ts: Date.now(), rates: { USD: 40 } };
+    eq(fxTryOf('USD', fxT), 40, 'kur okuma');
+    eq(fxTryOf('EUR', fxT), null, 'olmayan kur null');
+    eq(fxFresh({ ts: Date.now() - 25 * 3600 * 1000 }), false, '24 saatten eski kur bayat');
     var bad = checks.filter(function (c) { return !c.ok; });
     if (bad.length) {
       console.error('SELFTEST FAIL', bad);
